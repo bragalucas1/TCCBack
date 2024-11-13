@@ -14,7 +14,6 @@ const storage = multer.diskStorage({
     const activityDir = path.join(baseUploadDir, activityName);
 
     // console.log("Arquivo recebido:", file);
-    // console.log("Diretório de destino:", activityDir);
 
     if (!fs.existsSync(activityDir)) {
       fs.mkdirSync(activityDir, { recursive: true });
@@ -23,11 +22,11 @@ const storage = multer.diskStorage({
     cb(null, activityDir);
   },
   filename: function (req, file, cb) {
-    if(req.body.perfilSubmissao === 'aluno'){
+    if (req.body.perfilSubmissao === "aluno") {
       const uniqueSuffix = `${req.body.nomeUsuario}-${file.originalname}`;
       return cb(null, uniqueSuffix);
     }
-    
+
     const uniqueSuffix = file.originalname;
     cb(null, uniqueSuffix);
   },
