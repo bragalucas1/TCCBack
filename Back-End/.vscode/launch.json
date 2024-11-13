@@ -1,0 +1,17 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "type": "node",
+        "request": "launch",
+        "name": "Iniciar Express",
+        "skipFiles": ["<node_internals>/**"],
+        "program": "${workspaceFolder}/index.js",  // ou o caminho do seu arquivo principal
+        "env": {
+          "NODE_ENV": "development"
+        },
+        "runtimeExecutable": "node"
+      }
+    ]
+  }
+  
