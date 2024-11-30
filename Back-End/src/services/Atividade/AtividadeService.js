@@ -4,7 +4,29 @@ const AtividadeRepository = require("../../repository/Atividade/AtividadeReposit
 const ArquivoService = require("../Arquivo/ArquivoService");
 
 const AtividadeService = {
-  listarAtividades: async () => {
+  listarAtividades: async (userId) => {
+    try {
+      const atividades = await AtividadeRepository.listarAtividades(userId);
+      const atividadesProcessadas = await Promise.all(
+        atividades.map(async (atividade) => {
+          if (atividade.submissoes.length > 0) {
+            const submissoesProcessadas =
+              await ArquivoService.processasSubmissoes(atividade.submissoes);
+            return {
+              ...atividade,
+              submissoes: submissoesProcessadas,
+            };
+          }
+          return atividade;
+        })
+      );
+
+      return atividadesProcessadas;
+    } catch (error) {
+      throw new Error("Erro ao listar atividades no Banco: " + error.message);
+    }
+  },
+  listarAtividadesTeacher: async () => {
     try {
       const atividades = await AtividadeRepository.listarAtividades();
       const atividadesProcessadas = await Promise.all(
@@ -223,6 +245,37 @@ const AtividadeService = {
     }
 
     return await AtividadeService.editarAtividade(dadosAtualizacao);
+  },
+  obterPdfAtiviade: async (activityName) => {
+    try {
+      console.log("entrei aq");
+      const uploadsPath = path.join(
+        __dirname,
+        "../../../uploads",
+        activityName
+      );
+
+      // Log para debug
+      console.log("Caminho da atividade:", uploadsPath);
+      try {
+        await fs.access(uploadsPath);
+      } catch (error) {
+        throw new Error(`Diretório não encontrado: ${uploadsPath}`);
+      }
+      const files = await fs.readdir(uploadsPath);
+      console.log("Arquivos encontrados:", files);
+      const pdfFile = files.find((file) => file.toLowerCase().endsWith(".pdf"));
+      console.log("pdfFile", pdfFile);
+
+      if (!pdfFile) {
+        throw new Error("PDF não encontrado");
+      }
+
+      const pdfPath = path.join(uploadsPath, pdfFile);
+      return pdfPath;
+    } catch (error) {
+      throw new Error("Erro ao obter pdf da atividade:" + error.message);
+    }
   },
 };
 

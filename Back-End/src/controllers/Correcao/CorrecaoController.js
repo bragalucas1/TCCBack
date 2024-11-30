@@ -10,7 +10,7 @@ const CorrecaoController = {
         userName,
         activityId
       );
-      res.status(200).json({ success: resultado.correto });
+      res.status(200).json({ success: resultado });
     } catch (error) {
       res.status(500).json({ error: "Erro ao realizar correção." });
     }

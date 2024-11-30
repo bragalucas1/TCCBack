@@ -14,7 +14,7 @@ const AtividadeRepository = {
       },
     });
   },
-  listarAtividades: async () => {
+  listarAtividades: async (userId) => {
     return await prisma.atividades.findMany({
       select: {
         id: true,
@@ -23,7 +23,7 @@ const AtividadeRepository = {
         conteudo: true,
         caminho_pdf: true,
         caminho_codigo_base: true,
-        submissoes: true, 
+        submissoes: true,
       },
     });
   },
@@ -38,6 +38,13 @@ const AtividadeRepository = {
     return await prisma.atividades.findUnique({
       where: {
         id: id,
+      },
+      include: {
+        submissoes: {
+          orderBy: {
+            data_submissao: "desc", // Ordena do mais recente para o mais antigo
+          },
+        },
       },
     });
   },

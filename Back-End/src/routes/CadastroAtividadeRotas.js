@@ -11,7 +11,6 @@ atividadeRoute.post(
   ]),
   AtividadeController.salvarDadosAtividade
 );
-
 atividadeRoute.get("/listarAtividades", AtividadeController.listarAtividades);
 atividadeRoute.post("/removerAtividade", AtividadeController.deletarAtividade);
 atividadeRoute.post(
@@ -22,5 +21,10 @@ atividadeRoute.post(
   ]),
   AtividadeController.editarAtividade
 );
+atividadeRoute.post(
+  "/listarAtividadePorId",
+  AtividadeController.listarAtividadePorId
+);
+atividadeRoute.get("/obterPdf", AtividadeController.obterPdfAtiviade);
 
 module.exports = atividadeRoute;

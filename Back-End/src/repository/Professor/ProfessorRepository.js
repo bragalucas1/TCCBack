@@ -32,7 +32,7 @@ const ProfessorRepository = {
   removerAluno: async (aluno) => {
     return await prisma.usuarios.delete({
       where: {
-        id: aluno.id,
+        id: Number(aluno.id),
       },
     });
   },
