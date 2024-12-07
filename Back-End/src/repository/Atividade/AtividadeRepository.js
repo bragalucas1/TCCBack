@@ -3,12 +3,20 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 const AtividadeRepository = {
-  salvarAtividade: async (title, type, content, arquivoFonteBase, pdfFile) => {
+  salvarAtividade: async (
+    title,
+    type,
+    content,
+    dataLimite,
+    arquivoFonteBase,
+    pdfFile
+  ) => {
     return await prisma.atividades.create({
       data: {
         nome: title,
         tipo: type,
         conteudo: content,
+        data_limite: new Date(dataLimite).toISOString(),
         caminho_pdf: pdfFile,
         caminho_codigo_base: arquivoFonteBase,
       },
@@ -24,6 +32,7 @@ const AtividadeRepository = {
         caminho_pdf: true,
         caminho_codigo_base: true,
         submissoes: true,
+        data_limite: true,
       },
     });
   },
@@ -59,6 +68,7 @@ const AtividadeRepository = {
         conteudo: atividade.conteudo,
         caminho_pdf: atividade.caminho_pdf,
         caminho_codigo_base: atividade.caminho_codigo_base,
+        data_limite: new Date(atividade.data_limite).toISOString(),
       },
     });
   },

@@ -12,6 +12,10 @@ atividadeRoute.post(
   AtividadeController.salvarDadosAtividade
 );
 atividadeRoute.get("/listarAtividades", AtividadeController.listarAtividades);
+atividadeRoute.get(
+  "/listarAtividadesProf",
+  AtividadeController.listarAtividadesTeacher
+);
 atividadeRoute.post("/removerAtividade", AtividadeController.deletarAtividade);
 atividadeRoute.post(
   "/editarAtividade",

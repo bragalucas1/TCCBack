@@ -3,9 +3,9 @@ const AtividadeService = require("../../services/Atividade/AtividadeService");
 const AtividadeController = {
   salvarDadosAtividade: async (req, res) => {
     try {
-      const { nome, tipo, conteudo } = req.body;
+      const { nome, tipo, conteudo, dataLimite } = req.body;
       const arquivos = req.files;
-      const atividadeData = { nome, tipo, conteudo, arquivos };
+      const atividadeData = { nome, tipo, conteudo, dataLimite, arquivos };
       await AtividadeService.salvarDadosAtividade(atividadeData);
 
       res.status(200).json({ success: true });
@@ -25,6 +25,7 @@ const AtividadeController = {
   },
   listarAtividadesTeacher: async (req, res) => {
     try {
+      console.log("controller");
       const atividades = await AtividadeService.listarAtividadesTeacher();
       res.status(200).json({ success: true, atividades });
     } catch (error) {
@@ -43,17 +44,21 @@ const AtividadeController = {
   },
   editarAtividade: async (req, res) => {
     try {
-      const { id, nome, tipo, conteudo } = req.body;
+      const { id, nome, tipo, dataLimite, conteudo } = req.body;
       const atividadeData = {
         id,
         nome,
         tipo,
+        dataLimite,
         conteudo,
         arquivos: req.files,
       };
+
+      console.log(atividadeData);
       await AtividadeService.editarAtividadeExistente(atividadeData);
       res.status(200).json({ success: true });
     } catch (error) {
+      console.log(error);
       res.status(500).json({ error: "Erro ao editar atividade." });
     }
   },

@@ -41,15 +41,14 @@ const ProfessorService = {
       const formattedData = fileContent
         .split("\n")
         .map((line) => line.split(";"))
-        .map(([nome, matricula, turma]) => ({
+        .map(([nome, matricula, turma, turmap]) => ({
           nome,
           matricula,
           turma: Number(turma.replace("\r", "")),
+          turmap: Number(turmap.replace("\r", "")),
           perfil: 2,
           senha: matricula,
         }));
-
-      console.log(formattedData);
 
       const result = await ProfessorRepository.cargaAluno(formattedData);
       return result;

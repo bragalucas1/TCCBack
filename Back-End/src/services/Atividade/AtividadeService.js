@@ -31,15 +31,21 @@ const AtividadeService = {
       const atividades = await AtividadeRepository.listarAtividades();
       const atividadesProcessadas = await Promise.all(
         atividades.map(async (atividade) => {
+          // Formata a data para o padrão do input datetime-local
+          const dataFormatada = atividade.data_limite
+            ? new Date(atividade.data_limite).toISOString().slice(0, 16)
+            : "";
+
           if (atividade.submissoes.length > 0) {
             const submissoesProcessadas =
               await ArquivoService.processasSubmissoes(atividade.submissoes);
             return {
               ...atividade,
+              data_limite: dataFormatada,
               submissoes: submissoesProcessadas,
             };
           }
-          return atividade;
+          return { ...atividade, data_limite: dataFormatada };
         })
       );
 
@@ -50,7 +56,7 @@ const AtividadeService = {
   },
   salvarDadosAtividade: async (atividadeData) => {
     try {
-      const { nome, tipo, conteudo, arquivos } = atividadeData;
+      const { nome, tipo, conteudo, dataLimite, arquivos } = atividadeData;
       const arquivoFonteBase = arquivos.caminho_codigo_base[0].path;
       const pdfFile = arquivos.caminho_pdf[0].path;
 
@@ -58,6 +64,7 @@ const AtividadeService = {
         nome,
         tipo,
         conteudo,
+        dataLimite,
         arquivoFonteBase,
         pdfFile
       );
@@ -150,8 +157,7 @@ const AtividadeService = {
     }
   },
   editarAtividadeExistente: async (atividadeData) => {
-    const { id, nome, tipo, conteudo, arquivos } = atividadeData;
-
+    const { id, nome, tipo, dataLimite, conteudo, arquivos } = atividadeData;
     const baseUploadDir = path.join(__dirname, "..", "..", "uploads");
     const atividadeAtual = await AtividadeService.buscarAtividadePorId(
       atividadeData.id
@@ -166,8 +172,9 @@ const AtividadeService = {
       nome: nome || atividadeAtual.nome,
       tipo: tipo || atividadeAtual.tipo,
       conteudo: conteudo || atividadeAtual.conteudo,
-      caminho_pdf: null,
-      caminho_codigo_base: null,
+      caminho_pdf: atividadeAtual.caminho_pdf, // Mantém o caminho existente
+      caminho_codigo_base: atividadeAtual.caminho_codigo_base, // Mantém o caminho existente
+      data_limite: dataLimite || atividadeAtual.data_limite,
     };
 
     if (nome && nome !== atividadeAtual.nome) {
@@ -243,7 +250,7 @@ const AtividadeService = {
           arquivos.caminho_codigo_base[0].path;
       }
     }
-
+    console.log("final", dadosAtualizacao);
     return await AtividadeService.editarAtividade(dadosAtualizacao);
   },
   obterPdfAtiviade: async (activityName) => {

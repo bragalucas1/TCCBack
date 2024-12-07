@@ -9,6 +9,7 @@ const ProfessorRepository = {
         nome: true,
         matricula: true,
         turma: true,
+        turmap: true,
         id: true,
       },
       where: {
@@ -25,6 +26,7 @@ const ProfessorRepository = {
       data: {
         nome: aluno.nome,
         turma: aluno.turma,
+        turmap: aluno.turmap,
         matricula: aluno.matricula,
       },
     });

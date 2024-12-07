@@ -46,7 +46,6 @@ const ProfessorController = {
       const alunos = await ProfessorService.cargaAluno(formData);
       res.status(200).json({ success: true, alunos });
     } catch (error) {
-      console.log(error);
       res.status(500).json({ error: "Erro ao dar carga em alunos." });
     }
   },
