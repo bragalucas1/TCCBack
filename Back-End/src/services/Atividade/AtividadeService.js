@@ -9,15 +9,20 @@ const AtividadeService = {
       const atividades = await AtividadeRepository.listarAtividades(userId);
       const atividadesProcessadas = await Promise.all(
         atividades.map(async (atividade) => {
+          const dataFormatada = atividade.data_limite
+            ? new Date(atividade.data_limite).toISOString().slice(0, 16)
+            : "";
+
           if (atividade.submissoes.length > 0) {
             const submissoesProcessadas =
               await ArquivoService.processasSubmissoes(atividade.submissoes);
             return {
               ...atividade,
+              data_limite: dataFormatada,
               submissoes: submissoesProcessadas,
             };
           }
-          return atividade;
+          return { ...atividade, data_limite: dataFormatada };
         })
       );
 

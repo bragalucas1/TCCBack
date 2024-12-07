@@ -43,6 +43,7 @@ const ProfessorRepository = {
       data: {
         nome: aluno.nome,
         turma: aluno.turma,
+        turmap: Number(aluno.turmap),
         senha: aluno.matricula,
         matricula: aluno.matricula,
         perfil: 2,
