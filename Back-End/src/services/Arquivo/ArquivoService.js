@@ -50,6 +50,26 @@ const ArquivoService = {
       })
     );
   },
+  lerArquivoEntrada: async (caminhoArquivo) => {
+    try {
+      const arquivo = await fs.readFile(caminhoArquivo);
+      const conteudo = arquivo.toString("utf-8");
+  
+      const linhas = conteudo.split("\n").filter((linha) => linha.trim() !== "");
+      const entradas = linhas.map((linha) => {
+        const [numero1, numero2, resultadoEsperado] = linha.split(",");
+        return {
+          numero1: parseFloat(numero1.trim()),
+          numero2: parseFloat(numero2.trim()),
+          resultadoEsperado: parseFloat(resultadoEsperado.trim()),
+        };
+      });
+  
+      return entradas; 
+    } catch (error) {
+      throw new Error("Erro ao ler arquivo de entrada: " + error.message);
+    }
+  },
 };
 
 module.exports = ArquivoService;

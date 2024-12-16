@@ -82,7 +82,6 @@ const AtividadeController = {
       res.sendFile(pdfPath, (err) => {
         if (err) {
           console.error("Erro ao enviar arquivo:", err);
-          // Only send error response if headers haven't been sent
           if (!res.headersSent) {
             res.status(500).json({ error: "Erro ao enviar o arquivo PDF" });
           }

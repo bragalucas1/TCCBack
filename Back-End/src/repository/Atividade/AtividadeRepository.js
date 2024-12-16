@@ -59,7 +59,7 @@ const AtividadeRepository = {
       include: {
         submissoes: {
           orderBy: {
-            data_submissao: "desc", // Ordena do mais recente para o mais antigo
+            data_submissao: "desc", 
           },
         },
       },

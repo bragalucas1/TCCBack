@@ -15,18 +15,62 @@ const CorrecaoService = {
         file.path
       );
 
-      const saidaAluno = await CorrecaoService.executaPython(arquivoAluno);
-      const saidaBase = await CorrecaoService.executaPython(
-        atividadeBase.caminho_codigo_base
+      if (atividadeBase.possui_verificacao) {
+        return await CorrecaoService.corrigirComEntradas(
+          arquivoAluno,
+          atividadeBase,
+          userId,
+          userName,
+          activityId,
+          conteudoArquivoComprimido
+        );
+      } else {
+        return await CorrecaoService.corrigirFluxoSimples(
+          arquivoAluno,
+          atividadeBase,
+          userId,
+          userName,
+          activityId,
+          conteudoArquivoComprimido
+        );
+      }
+    } catch (error) {
+      console.error("Erro no fluxo de correção:", error);
+      throw error;
+    }
+  },
+  corrigirComEntradas: async (
+    arquivoAluno,
+    atividadeBase,
+    userId,
+    userName,
+    activityId,
+    conteudoArquivoComprimido
+  ) => {
+    try {
+      const entradas = await ArquivoService.lerArquivoEntrada(
+        atividadeBase.caminho_codigo_verificacao
       );
 
-      if (!saidaAluno.sucesso) {
+      const resultadoEntrada = await CorrecaoService.compararExecucoes(
+        arquivoAluno,
+        atividadeBase,
+        entradas
+      );
+
+      const algumErro = resultadoEntrada.some((resultado) => resultado.erro);
+
+      if (algumErro) {
+        const resultadoComErro = resultadoEntrada.find(
+          (resultado) => resultado.erro
+        );
+
         const resultado = {
           correto: false,
           erro: true,
-          detalhesErro: saidaAluno.erro,
-          saidaAluno: saidaAluno.mensagem,
-          saidaEsperada: saidaBase.sucesso ? saidaBase.dados : null,
+          detalhesErro: resultadoComErro.saidaAluno, // Mensagem de erro do aluno
+          saidaAluno: resultadoComErro.saidaAluno,
+          saidaEsperada: resultadoComErro.saidaBase,
         };
 
         await CorrecaoService.atualizarSubmissao(
@@ -40,27 +84,121 @@ const CorrecaoService = {
         return resultado;
       }
 
+      const todosCorretos = resultadoEntrada.every(
+        (resultado) => resultado.correto
+      );
+
       const resultado = {
-        correto: saidaAluno.dados === saidaBase.dados,
+        correto: todosCorretos,
         erro: false,
         detalhesErro: null,
-        saidaAluno: saidaAluno.dados,
-        saidaEsperada: saidaBase.dados,
+        entradasDetalhes: resultadoEntrada,
       };
 
       await CorrecaoService.atualizarSubmissao(
         userId,
         userName,
         activityId,
-        resultado.correto ? "Correto" : "Incorreto",
+        todosCorretos ? "Correto" : "Incorreto",
         conteudoArquivoComprimido
       );
 
       return resultado;
     } catch (error) {
-      console.error("Erro no fluxo de correção:", error);
-      throw error;
+      console.error("Erro ao corrigir com entradas:", error);
+      throw new Error("Erro ao corrigir atividade com entradas.");
     }
+  },
+  corrigirFluxoSimples: async (
+    arquivoAluno,
+    atividadeBase,
+    userId,
+    userName,
+    activityId,
+    conteudoArquivoComprimido
+  ) => {
+    const saidaAluno = await CorrecaoService.executaPython(arquivoAluno);
+    const saidaBase = await CorrecaoService.executaPython(
+      atividadeBase.caminho_codigo_base
+    );
+
+    if (!saidaAluno.sucesso) {
+      const resultado = {
+        correto: false,
+        erro: true,
+        detalhesErro: saidaAluno.erro,
+        saidaAluno: saidaAluno.mensagem,
+        saidaEsperada: saidaBase.sucesso ? saidaBase.dados : null,
+      };
+
+      await CorrecaoService.atualizarSubmissao(
+        userId,
+        userName,
+        activityId,
+        "Erro",
+        conteudoArquivoComprimido
+      );
+
+      return resultado;
+    }
+
+    const resultado = {
+      correto: saidaAluno.dados === saidaBase.dados,
+      erro: false,
+      detalhesErro: null,
+      saidaAluno: saidaAluno.dados,
+      saidaEsperada: saidaBase.dados,
+    };
+
+    await CorrecaoService.atualizarSubmissao(
+      userId,
+      userName,
+      activityId,
+      resultado.correto ? "Correto" : "Incorreto",
+      conteudoArquivoComprimido
+    );
+
+    return resultado;
+  },
+  executaPythonComEntradas: (arquivoPath, entrada) => {
+    return new Promise((resolve) => {
+      let saida = "";
+      let erro = "";
+
+      const processo = spawn("python", [arquivoPath]);
+
+      if (entrada) {
+        processo.stdin.write(entrada);
+        processo.stdin.end();
+      }
+
+      processo.stdout.on("data", (data) => {
+        saida += data.toString();
+      });
+
+      processo.stderr.on("data", (data) => {
+        erro += data.toString();
+      });
+
+      processo.on("close", (code) => {
+        if (code !== 0) {
+          const resultado = {
+            sucesso: false,
+            codigo: code,
+            erro: CorrecaoService.mapearErroPython(erro),
+            mensagem: erro,
+          };
+          resolve(resultado);
+        } else {
+          resolve({
+            sucesso: true,
+            codigo: code,
+            dados: saida.trim(),
+            erro: null,
+          });
+        }
+      });
+    });
   },
   executaPython: (arquivoPath) => {
     return new Promise((resolve) => {
@@ -162,7 +300,7 @@ const CorrecaoService = {
       };
     }
     if (erro.includes("FileNotFoundError")) {
-    return {
+      return {
         tipo: "ERRO_ARQUIVO",
         descricao: `Linha ${numeroLinha}: Arquivo não encontrado.
                    Tradução: O programa tentou acessar um arquivo que não existe no caminho especificado.
@@ -200,6 +338,58 @@ const CorrecaoService = {
                  Tradução: Ocorreu um erro que não se encaixa nos padrões conhecidos.
                  Solução: Analise a mensagem de erro completa e verifique a lógica do código nesta linha.`,
     };
+  },
+  compararExecucoes: async (arquivoAluno, atividadeBase, entradas) => {
+    const resultados = [];
+
+    for (const entrada of entradas) {
+      const { numero1, numero2, resultadoEsperado } = entrada;
+
+      // Cria uma string representando a entrada para passar ao script Python
+      const entradaPython = `${numero1}\n${numero2}\n`;
+
+      // Executa o código do aluno
+      const saidaAluno = await CorrecaoService.executaPythonComEntradas(
+        arquivoAluno,
+        entradaPython
+      );
+
+      // Executa o código base (gabarito)
+      const saidaBase = await CorrecaoService.executaPythonComEntradas(
+        atividadeBase.caminho_codigo_base,
+        entradaPython
+      );
+
+      // Analisa os resultados
+      if (!saidaAluno.sucesso) {
+        // Caso o código do aluno tenha erro de execução
+        resultados.push({
+          entrada: entradaPython.trim(),
+          correto: false,
+          erro: true,
+          detalhesErro: saidaAluno.erro,
+          saidaAluno: saidaAluno.mensagem || null,
+          saidaBase: saidaBase.sucesso ? saidaBase.dados : null,
+          resultadoEsperado,
+        });
+      } else {
+        // Comparação dos resultados com o esperado
+        const resultadoCorreto =
+          saidaAluno.dados === saidaBase.dados &&
+          parseFloat(saidaAluno.dados) === resultadoEsperado;
+
+        resultados.push({
+          entrada: entradaPython.trim(),
+          correto: resultadoCorreto,
+          erro: false,
+          saidaAluno: saidaAluno.dados,
+          saidaBase: saidaBase.dados,
+          resultadoEsperado,
+        });
+      }
+    }
+
+    return resultados;
   },
 };
 
