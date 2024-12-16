@@ -9,16 +9,22 @@ const AtividadeRepository = {
     content,
     dataLimite,
     arquivoFonteBase,
-    pdfFile
+    pdfFile,
+    arquivoEntrada
   ) => {
     return await prisma.atividades.create({
       data: {
         nome: title,
         tipo: type,
         conteudo: content,
-        data_limite: new Date(dataLimite).toISOString(),
+        data_limite: new Date(
+          new Date(dataLimite).getTime() -
+            new Date().getTimezoneOffset() * 60000
+        ).toISOString(),
         caminho_pdf: pdfFile,
         caminho_codigo_base: arquivoFonteBase,
+        caminho_codigo_verificacao: arquivoEntrada ?? null,
+        possui_verificacao: arquivoEntrada ? true : false,
       },
     });
   },
@@ -33,6 +39,8 @@ const AtividadeRepository = {
         caminho_codigo_base: true,
         submissoes: true,
         data_limite: true,
+        possui_verificacao: true,
+        caminho_codigo_verificacao: true,
       },
     });
   },
@@ -69,6 +77,8 @@ const AtividadeRepository = {
         caminho_pdf: atividade.caminho_pdf,
         caminho_codigo_base: atividade.caminho_codigo_base,
         data_limite: new Date(atividade.data_limite).toISOString(),
+        possui_verificacao: atividade.possui_verificacao,
+        caminho_codigo_verificacao: atividade.caminho_codigo_verificacao,
       },
     });
   },

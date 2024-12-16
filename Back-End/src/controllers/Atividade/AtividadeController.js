@@ -25,7 +25,6 @@ const AtividadeController = {
   },
   listarAtividadesTeacher: async (req, res) => {
     try {
-      console.log("controller");
       const atividades = await AtividadeService.listarAtividadesTeacher();
       res.status(200).json({ success: true, atividades });
     } catch (error) {
@@ -44,17 +43,18 @@ const AtividadeController = {
   },
   editarAtividade: async (req, res) => {
     try {
-      const { id, nome, tipo, dataLimite, conteudo } = req.body;
+      const { id, nome, tipo, dataLimite, conteudo, possuiVerificacao } =
+        req.body;
       const atividadeData = {
         id,
         nome,
         tipo,
         dataLimite,
         conteudo,
+        possuiVerificacao,
         arquivos: req.files,
       };
 
-      console.log(atividadeData);
       await AtividadeService.editarAtividadeExistente(atividadeData);
       res.status(200).json({ success: true });
     } catch (error) {

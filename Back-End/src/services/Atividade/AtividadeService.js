@@ -64,6 +64,9 @@ const AtividadeService = {
       const { nome, tipo, conteudo, dataLimite, arquivos } = atividadeData;
       const arquivoFonteBase = arquivos.caminho_codigo_base[0].path;
       const pdfFile = arquivos.caminho_pdf[0].path;
+      const arquivoEntrada = arquivos.caminho_codigo_verificacao
+        ? arquivos.caminho_codigo_verificacao[0].path
+        : null;
 
       await AtividadeRepository.salvarAtividade(
         nome,
@@ -71,7 +74,8 @@ const AtividadeService = {
         conteudo,
         dataLimite,
         arquivoFonteBase,
-        pdfFile
+        pdfFile,
+        arquivoEntrada
       );
     } catch (error) {
       console.log(error);
@@ -162,8 +166,16 @@ const AtividadeService = {
     }
   },
   editarAtividadeExistente: async (atividadeData) => {
-    const { id, nome, tipo, dataLimite, conteudo, arquivos } = atividadeData;
-    const baseUploadDir = path.join(__dirname, "..", "..", "uploads");
+    const {
+      id,
+      nome,
+      tipo,
+      dataLimite,
+      conteudo,
+      arquivos,
+      possuiVerificacao,
+    } = atividadeData;
+    const baseUploadDir = path.join(__dirname, "..", "..", "..", "uploads");
     const atividadeAtual = await AtividadeService.buscarAtividadePorId(
       atividadeData.id
     );
@@ -177,14 +189,20 @@ const AtividadeService = {
       nome: nome || atividadeAtual.nome,
       tipo: tipo || atividadeAtual.tipo,
       conteudo: conteudo || atividadeAtual.conteudo,
-      caminho_pdf: atividadeAtual.caminho_pdf, // Mantém o caminho existente
-      caminho_codigo_base: atividadeAtual.caminho_codigo_base, // Mantém o caminho existente
+      caminho_pdf: atividadeAtual.caminho_pdf,
+      caminho_codigo_base: atividadeAtual.caminho_codigo_base,
       data_limite: dataLimite || atividadeAtual.data_limite,
+      possui_verificacao:
+        possuiVerificacao === "true" || possuiVerificacao === true, // Converte para booleano
+      caminho_codigo_verificacao:
+        possuiVerificacao === "true" || possuiVerificacao === true
+          ? atividadeAtual.caminho_codigo_verificacao
+          : null, // Define como null se `possuiVerificacao` for false
     };
 
     if (nome && nome !== atividadeAtual.nome) {
       const antigaPasta = path.join(baseUploadDir, atividadeAtual.nome);
-      const novaPasta = path.join(baseUploadDir, novoNome);
+      const novaPasta = path.join(baseUploadDir, nome);
 
       // Verificar se a pasta antiga existe
       try {
@@ -253,6 +271,18 @@ const AtividadeService = {
         }
         dadosAtualizacao.caminho_codigo_base =
           arquivos.caminho_codigo_base[0].path;
+      }
+
+      if (arquivos.caminho_codigo_verificacao) {
+        if (atividadeAtual.caminho_codigo_verificacao) {
+          try {
+            await fs.unlink(atividadeAtual.caminho_codigo_verificacao);
+          } catch (error) {
+            console.log("Erro ao remover código de verificação antigo:", error);
+          }
+        }
+        dadosAtualizacao.caminho_codigo_verificacao =
+          arquivos.caminho_codigo_verificacao[0].path;
       }
     }
     console.log("final", dadosAtualizacao);

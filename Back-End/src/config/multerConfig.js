@@ -9,11 +9,9 @@ if (!fs.existsSync(baseUploadDir)) {
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    // console.log(req.body);
     const activityName = req.body.nome || "CargaAlunos";
     const activityDir = path.join(baseUploadDir, activityName);
 
-    // console.log("Arquivo recebido:", file);
 
     if (!fs.existsSync(activityDir)) {
       fs.mkdirSync(activityDir, { recursive: true });

@@ -8,6 +8,7 @@ atividadeRoute.post(
   upload.fields([
     { name: "caminho_pdf", maxCount: 1 },
     { name: "caminho_codigo_base", maxCount: 1 },
+    { name: "caminho_codigo_verificacao", maxCount: 1 },
   ]),
   AtividadeController.salvarDadosAtividade
 );
@@ -22,6 +23,7 @@ atividadeRoute.post(
   upload.fields([
     { name: "caminho_pdf", maxCount: 1 },
     { name: "caminho_codigo_base", maxCount: 1 },
+    { name: "caminho_codigo_verificacao", maxCount: 1 },
   ]),
   AtividadeController.editarAtividade
 );

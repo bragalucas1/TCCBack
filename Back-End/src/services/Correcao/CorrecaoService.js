@@ -162,7 +162,7 @@ const CorrecaoService = {
       };
     }
     if (erro.includes("FileNotFoundError")) {
-      return {
+    return {
         tipo: "ERRO_ARQUIVO",
         descricao: `Linha ${numeroLinha}: Arquivo não encontrado.
                    Tradução: O programa tentou acessar um arquivo que não existe no caminho especificado.
