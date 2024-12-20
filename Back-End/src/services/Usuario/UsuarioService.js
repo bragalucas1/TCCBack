@@ -16,7 +16,6 @@ const UsuarioService = {
         matricula,
         senha
       );
-      console.log(user);
       return user;
     } catch (error) {
       throw new Error("Erro ao verificar credenciais: " + error.message);

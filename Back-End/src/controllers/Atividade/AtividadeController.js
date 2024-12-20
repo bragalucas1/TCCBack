@@ -19,7 +19,6 @@ const AtividadeController = {
       const atividades = await AtividadeService.listarAtividades(userId);
       res.status(200).json({ success: true, atividades });
     } catch (error) {
-      console.log(error);
       res.status(500).json({ error: "Erro ao listar atividades." });
     }
   },
@@ -58,7 +57,6 @@ const AtividadeController = {
       await AtividadeService.editarAtividadeExistente(atividadeData);
       res.status(200).json({ success: true });
     } catch (error) {
-      console.log(error);
       res.status(500).json({ error: "Erro ao editar atividade." });
     }
   },
@@ -73,7 +71,6 @@ const AtividadeController = {
   },
   obterPdfAtiviade: async (req, res) => {
     try {
-      console.log("aqui");
       const pdfPath = await AtividadeService.obterPdfAtiviade(
         req.query.activityName
       );
@@ -88,7 +85,6 @@ const AtividadeController = {
         }
       });
     } catch (error) {
-      console.log(error);
       res.status(500).json({ error: "Erro ao obter pdf da atividade." });
     }
   },

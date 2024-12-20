@@ -10,7 +10,6 @@ const AutenticacaoController = {
       );
       res.status(200).json({ success: true, user: user });
     } catch (error) {
-      console.log(error);
       res.status(500).json({ error: "Erro ao realizar o login" });
     }
   },

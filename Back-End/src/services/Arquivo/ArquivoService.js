@@ -54,8 +54,10 @@ const ArquivoService = {
     try {
       const arquivo = await fs.readFile(caminhoArquivo);
       const conteudo = arquivo.toString("utf-8");
-  
-      const linhas = conteudo.split("\n").filter((linha) => linha.trim() !== "");
+
+      const linhas = conteudo
+        .split("\n")
+        .filter((linha) => linha.trim() !== "");
       const entradas = linhas.map((linha) => {
         const [numero1, numero2, resultadoEsperado] = linha.split(",");
         return {
@@ -64,8 +66,8 @@ const ArquivoService = {
           resultadoEsperado: parseFloat(resultadoEsperado.trim()),
         };
       });
-  
-      return entradas; 
+
+      return entradas;
     } catch (error) {
       throw new Error("Erro ao ler arquivo de entrada: " + error.message);
     }

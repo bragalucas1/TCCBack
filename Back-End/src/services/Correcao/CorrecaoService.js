@@ -47,6 +47,12 @@ const CorrecaoService = {
     activityId,
     conteudoArquivoComprimido
   ) => {
+    //This is the most complex and badly written function in the codebase. Due to the hurry of time
+    //adding the need to deliver the project, the code was written in a hurry and without much care.
+    //The function is responsible for comparing the outputs of the student's code with the expected outputs,
+    //but is mapped just to one exercise and his inputs. It's necessary to refactor this function to be more
+    //generic and to be able to compare multiple exercises and their inputs.
+    //Good luck to the one who will refactor this function and I'm sorry for the mess I made, i needed to graduate.
     try {
       const entradas = await ArquivoService.lerArquivoEntrada(
         atividadeBase.caminho_codigo_verificacao
@@ -68,7 +74,7 @@ const CorrecaoService = {
         const resultado = {
           correto: false,
           erro: true,
-          detalhesErro: resultadoComErro.saidaAluno, // Mensagem de erro do aluno
+          detalhesErro: resultadoComErro.detalhesErro, 
           saidaAluno: resultadoComErro.saidaAluno,
           saidaEsperada: resultadoComErro.saidaBase,
         };
@@ -164,24 +170,54 @@ const CorrecaoService = {
     return new Promise((resolve) => {
       let saida = "";
       let erro = "";
+      let primeiroErroEncontrado = false;
 
-      const processo = spawn("python", [arquivoPath]);
+      const processo = spawn("python", ["-u", arquivoPath]);
+
+      const resolverComErro = (mensagemErro) => {
+        if (!primeiroErroEncontrado) {
+          primeiroErroEncontrado = true;
+          const resultado = {
+            sucesso: false,
+            codigo: 1,
+            erro: CorrecaoService.mapearErroPython(mensagemErro),
+            mensagem: mensagemErro,
+          };
+          processo.kill();
+          return resolve(resultado);
+        }
+      };
 
       if (entrada) {
-        processo.stdin.write(entrada);
+        processo.stdin.write(entrada, (err) => {
+          if (err) {
+            console.error("Erro ao gravar no stdin:", err.message);
+            if (err.code === "EPIPE") {
+              resolverComErro(err.message);
+            }
+          }
+        });
         processo.stdin.end();
       }
+
+      processo.stdin.on("error", (err) => {
+        if (err.code === "EPIPE") {
+          resolverComErro(err.message);
+        }
+      });
 
       processo.stdout.on("data", (data) => {
         saida += data.toString();
       });
 
       processo.stderr.on("data", (data) => {
-        erro += data.toString();
+        erro = data.toString();
+        console.error("Erro capturado no stderr:", erro);
+        resolverComErro(erro);
       });
 
       processo.on("close", (code) => {
-        if (code !== 0) {
+        if (code !== 0 && !primeiroErroEncontrado) {
           const resultado = {
             sucesso: false,
             codigo: code,
@@ -189,7 +225,7 @@ const CorrecaoService = {
             mensagem: erro,
           };
           resolve(resultado);
-        } else {
+        } else if (!primeiroErroEncontrado) {
           resolve({
             sucesso: true,
             codigo: code,
@@ -345,24 +381,19 @@ const CorrecaoService = {
     for (const entrada of entradas) {
       const { numero1, numero2, resultadoEsperado } = entrada;
 
-      // Cria uma string representando a entrada para passar ao script Python
       const entradaPython = `${numero1}\n${numero2}\n`;
 
-      // Executa o código do aluno
       const saidaAluno = await CorrecaoService.executaPythonComEntradas(
         arquivoAluno,
         entradaPython
       );
 
-      // Executa o código base (gabarito)
       const saidaBase = await CorrecaoService.executaPythonComEntradas(
         atividadeBase.caminho_codigo_base,
         entradaPython
       );
 
-      // Analisa os resultados
       if (!saidaAluno.sucesso) {
-        // Caso o código do aluno tenha erro de execução
         resultados.push({
           entrada: entradaPython.trim(),
           correto: false,
@@ -373,7 +404,6 @@ const CorrecaoService = {
           resultadoEsperado,
         });
       } else {
-        // Comparação dos resultados com o esperado
         const resultadoCorreto =
           saidaAluno.dados === saidaBase.dados &&
           parseFloat(saidaAluno.dados) === resultadoEsperado;

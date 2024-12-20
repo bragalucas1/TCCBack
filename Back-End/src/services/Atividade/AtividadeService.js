@@ -78,7 +78,6 @@ const AtividadeService = {
         arquivoEntrada
       );
     } catch (error) {
-      console.log(error);
       throw new Error("Erro ao salvar atividade no Banco: " + error.message);
     }
   },
@@ -87,7 +86,6 @@ const AtividadeService = {
       const atividades = await AtividadeRepository.removerAtividade(id);
       return atividades;
     } catch (error) {
-      console.log(error);
       throw new Error("Erro ao remover atividade no Banco: " + error.message);
     }
   },
@@ -99,7 +97,6 @@ const AtividadeService = {
       try {
         await fs.access(diretorioAtividade);
       } catch (error) {
-        console.log(`Diretório não encontrado: ${diretorioAtividade}`);
         return;
       }
 
@@ -109,7 +106,6 @@ const AtividadeService = {
         const caminhoArquivo = path.join(diretorioAtividade, arquivo);
         try {
           await fs.unlink(caminhoArquivo);
-          // console.log(`Arquivo removido: ${caminhoArquivo}`);
         } catch (error) {
           console.error(`Erro ao remover arquivo ${caminhoArquivo}:`, error);
           throw new Error(`Falha ao remover arquivo: ${arquivo}`);
@@ -118,7 +114,6 @@ const AtividadeService = {
 
       try {
         await fs.rmdir(diretorioAtividade);
-        // console.log(`Diretório removido: ${diretorioAtividade}`);
       } catch (error) {
         console.error(
           `Erro ao remover diretório ${diretorioAtividade}:`,
@@ -126,7 +121,6 @@ const AtividadeService = {
         );
         try {
           await fs.rm(diretorioAtividade, { recursive: true, force: true });
-          // console.log(`Diretório removido forçadamente: ${diretorioAtividade}`);
         } catch (finalError) {
           console.error(
             `Falha total ao remover diretório ${diretorioAtividade}:`,
@@ -161,7 +155,6 @@ const AtividadeService = {
       );
       return atividade;
     } catch (error) {
-      console.log(error);
       throw new Error("Erro ao buscar atividade por id: " + error.message);
     }
   },
@@ -253,7 +246,6 @@ const AtividadeService = {
           try {
             await fs.unlink(atividadeAtual.caminho_pdf);
           } catch (error) {
-            console.log("Erro ao remover PDF antigo:", error);
           }
         }
         dadosAtualizacao.caminho_pdf = arquivos.caminho_pdf[0].path;
@@ -266,7 +258,6 @@ const AtividadeService = {
           try {
             await fs.unlink(atividadeAtual.caminho_codigo_base);
           } catch (error) {
-            console.log("Erro ao remover código base antigo:", error);
           }
         }
         dadosAtualizacao.caminho_codigo_base =
@@ -278,36 +269,29 @@ const AtividadeService = {
           try {
             await fs.unlink(atividadeAtual.caminho_codigo_verificacao);
           } catch (error) {
-            console.log("Erro ao remover código de verificação antigo:", error);
           }
         }
         dadosAtualizacao.caminho_codigo_verificacao =
           arquivos.caminho_codigo_verificacao[0].path;
       }
     }
-    console.log("final", dadosAtualizacao);
     return await AtividadeService.editarAtividade(dadosAtualizacao);
   },
   obterPdfAtiviade: async (activityName) => {
     try {
-      console.log("entrei aq");
       const uploadsPath = path.join(
         __dirname,
         "../../../uploads",
         activityName
       );
 
-      // Log para debug
-      console.log("Caminho da atividade:", uploadsPath);
       try {
         await fs.access(uploadsPath);
       } catch (error) {
         throw new Error(`Diretório não encontrado: ${uploadsPath}`);
       }
       const files = await fs.readdir(uploadsPath);
-      console.log("Arquivos encontrados:", files);
       const pdfFile = files.find((file) => file.toLowerCase().endsWith(".pdf"));
-      console.log("pdfFile", pdfFile);
 
       if (!pdfFile) {
         throw new Error("PDF não encontrado");
