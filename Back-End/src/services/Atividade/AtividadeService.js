@@ -36,7 +36,6 @@ const AtividadeService = {
       const atividades = await AtividadeRepository.listarAtividades();
       const atividadesProcessadas = await Promise.all(
         atividades.map(async (atividade) => {
-          // Formata a data para o padrão do input datetime-local
           const dataFormatada = atividade.data_limite
             ? new Date(atividade.data_limite).toISOString().slice(0, 16)
             : "";
@@ -186,18 +185,17 @@ const AtividadeService = {
       caminho_codigo_base: atividadeAtual.caminho_codigo_base,
       data_limite: dataLimite || atividadeAtual.data_limite,
       possui_verificacao:
-        possuiVerificacao === "true" || possuiVerificacao === true, // Converte para booleano
+        possuiVerificacao === "true" || possuiVerificacao === true,
       caminho_codigo_verificacao:
         possuiVerificacao === "true" || possuiVerificacao === true
           ? atividadeAtual.caminho_codigo_verificacao
-          : null, // Define como null se `possuiVerificacao` for false
+          : null,
     };
 
     if (nome && nome !== atividadeAtual.nome) {
       const antigaPasta = path.join(baseUploadDir, atividadeAtual.nome);
       const novaPasta = path.join(baseUploadDir, nome);
 
-      // Verificar se a pasta antiga existe
       try {
         const pastaAntigaExiste = await fs
           .access(antigaPasta)
@@ -205,17 +203,14 @@ const AtividadeService = {
           .catch(() => false);
 
         if (pastaAntigaExiste) {
-          // Criar nova pasta se não existir
           await fs.mkdir(novaPasta, { recursive: true });
 
-          // Mover todos os arquivos da pasta antiga para a nova
           const arquivos = await fs.readdir(antigaPasta);
           for (const arquivo of arquivos) {
             const caminhoAntigo = path.join(antigaPasta, arquivo);
             const caminhoNovo = path.join(novaPasta, arquivo);
             await fs.rename(caminhoAntigo, caminhoNovo);
 
-            // Atualizar caminhos no objeto de atualização
             if (
               atividadeAtual.caminho_pdf &&
               atividadeAtual.caminho_pdf.includes(arquivo)
@@ -230,7 +225,6 @@ const AtividadeService = {
             }
           }
 
-          // Remover pasta antiga após mover todos os arquivos
           await fs.rmdir(antigaPasta);
         }
       } catch (error) {
@@ -238,27 +232,21 @@ const AtividadeService = {
       }
     }
 
-    // Se foram enviados novos arquivos (o Multer já salvou eles)
     if (arquivos) {
-      // Se tem novo PDF
       if (arquivos.caminho_pdf) {
         if (atividadeAtual.caminho_pdf) {
           try {
             await fs.unlink(atividadeAtual.caminho_pdf);
-          } catch (error) {
-          }
+          } catch (error) {}
         }
         dadosAtualizacao.caminho_pdf = arquivos.caminho_pdf[0].path;
       }
 
-      // Se tem novo código base
       if (arquivos.caminho_codigo_base) {
-        // Remover código base antigo se existir
         if (atividadeAtual.caminho_codigo_base) {
           try {
             await fs.unlink(atividadeAtual.caminho_codigo_base);
-          } catch (error) {
-          }
+          } catch (error) {}
         }
         dadosAtualizacao.caminho_codigo_base =
           arquivos.caminho_codigo_base[0].path;
@@ -268,8 +256,7 @@ const AtividadeService = {
         if (atividadeAtual.caminho_codigo_verificacao) {
           try {
             await fs.unlink(atividadeAtual.caminho_codigo_verificacao);
-          } catch (error) {
-          }
+          } catch (error) {}
         }
         dadosAtualizacao.caminho_codigo_verificacao =
           arquivos.caminho_codigo_verificacao[0].path;

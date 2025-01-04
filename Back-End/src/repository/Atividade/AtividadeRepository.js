@@ -59,7 +59,7 @@ const AtividadeRepository = {
       include: {
         submissoes: {
           orderBy: {
-            data_submissao: "desc", 
+            data_submissao: "desc",
           },
         },
       },
